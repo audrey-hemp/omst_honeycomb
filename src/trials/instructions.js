@@ -107,8 +107,8 @@
 //                       cmst_instr_contOSN.html into template (adding imports,
 //                       exports, removing JATOS code)
 //        6/14/23 (AGH): loaded images into ../assets and imported { images }
-//                       from ../lib/utils     
-//        6/16/23 (AGH): created and imported custom plugins in ./uniqueplugins 
+//                       from ../lib/utils
+//        6/16/23 (AGH): created and imported custom plugins in ./uniqueplugins
 //                       adpated from Craig's create-image-buttons plugin
 //        6/20/23 (AGH): created ./selectLanguage and imported { lang }
 //                       created ./selectRespType and imported { resp_mode }
@@ -127,7 +127,7 @@
 
 //----------------------- 1 ----------------------
 //-------------------- IMPORTS -------------------
-
+console.log('inside instructions.js');
 // importing jspysch plugins
 import jsPsychHtmlKeyboardResponse from '@jspsych/plugin-html-keyboard-response';
 import jsPsychHtmlButtonResponse from '@jspsych/plugin-html-button-response';
@@ -151,7 +151,7 @@ import { resp_mode } from '../components/Login';
 // A FUNCTION.
 
 // var to store the task name (data property)
-const phasename = 'cmst_instr_contOSN'; 
+const phasename = 'cmst_instr_contOSN';
 
 var instr_choice = function () {
   if (resp_mode == 'button') {
@@ -264,7 +264,7 @@ var trial_choices = function () {
 //----------------------- 3 ----------------------
 //-------------------- TRIALS --------------------
 // These trials call the functions housing the parameter information.
-// There is one keyboard version and one button version for everytrial that will be 
+// There is one keyboard version and one button version for everytrial that will be
 // conditionally added to the main timeline depending on the resp_mode selection
 
 //---------------intro---------------
@@ -289,35 +289,55 @@ var button_intro = {
 };
 
 //----------------new1----------------
-var key_new1 = {
-  type: jsPsychCategorizeImage,
-  stimulus: images['foil_1032.jpg'],
-  key_answer: function () {
-    return lang.instructions.key.trial_choices.new;
-  },
-  button_answer: 2,
-  choices: trial_choices,
-  prompt: prompt_new,
-  force_correct_button_press: true,
-  incorrect_text: inc_new,
-  correct_text: cor_new,
-  data: { task: phasename },
-};
+// var key_new1 = {
+//   type: jsPsychCategorizeImage,
+//   stimulus: images['foil_1032.jpg'],
+//   key_answer: function () {
+//     return lang.instructions.key.trial_choices.new;
+//   },
+//   button_answer: 2,
+//   choices: trial_choices,
+//   prompt: prompt_new,
+//   force_correct_button_press: true,
+//   incorrect_text: inc_new,
+//   correct_text: cor_new,
+//   data: { task: phasename },
+// };
 
-var button_new1 = {
-  type: jsPsychCategorizeImageButtons,
-  stimulus: images['foil_1032.jpg'],
-  key_answer: function () {
-    return lang.instructions.key.trial_choices.new;
-  },
-  button_answer: 2,
-  choices: trial_choices,
-  prompt: prompt_new,
-  force_correct_button_press: true,
-  incorrect_text: inc_new,
-  correct_text: cor_new,
-  data: { task: phasename },
-};
+// var button_new1 = {
+//   type: jsPsychCategorizeImageButtons,
+//   stimulus: images['foil_1032.jpg'],
+//   key_answer: function () {
+//     return lang.instructions.key.trial_choices.new;
+//   },
+//   button_answer: 2,
+//   choices: trial_choices,
+//   prompt: prompt_new,
+//   force_correct_button_press: true,
+//   incorrect_text: inc_new,
+//   correct_text: cor_new,
+//   data: { task: phasename },
+// };
+
+var new1 = {};
+function refresh_instr_trials() {
+  console.log('refreshing...');
+  new1 = {
+    type: resp_mode == 'button' ? jsPsychCategorizeImageButtons : jsPsychCategorizeImage,
+    stimulus: images['foil_1032.jpg'],
+    key_answer: function () {
+      return lang.instructions.key.trial_choices.new;
+    },
+    button_answer: 2,
+    choices: trial_choices,
+    prompt: prompt_new,
+    force_correct_button_press: true,
+    incorrect_text: inc_new,
+    correct_text: cor_new,
+    data: { task: phasename },
+  };
+  console.log('refreshed instr trials');
+}
 
 //----------------new2----------------
 var key_new2 = {
@@ -651,17 +671,31 @@ var button_outtro = {
 // export the trials to be imported to the main timeline
 
 export {
-  key_intro, button_intro,
-  key_new1, button_new1,
-  key_new2, button_new2,
-  key_new3, button_new3,
-  key_repeat1, button_repeat1,
-  key_lure1, button_lure1,
-  key_side_by_side1, button_side_by_side1,
-  key_new4, button_new4,
-  key_new5, button_new5,
-  key_repeat2, button_repeat2,
-  key_lure2, button_lure2,
-  key_side_by_side2, button_side_by_side2,
-  key_outtro, button_outtro,
+  key_intro,
+  button_intro,
+  //key_new1, button_new1,
+  new1,
+  key_new2,
+  button_new2,
+  key_new3,
+  button_new3,
+  key_repeat1,
+  button_repeat1,
+  key_lure1,
+  button_lure1,
+  key_side_by_side1,
+  button_side_by_side1,
+  key_new4,
+  button_new4,
+  key_new5,
+  button_new5,
+  key_repeat2,
+  button_repeat2,
+  key_lure2,
+  button_lure2,
+  key_side_by_side2,
+  button_side_by_side2,
+  key_outtro,
+  button_outtro,
+  refresh_instr_trials,
 };

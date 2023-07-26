@@ -9,20 +9,20 @@
 //        7/18/23 (AGH): moved the timeline variables for contOMST
 //                       test_trials from ./trials (stim_set, trialorder,
 //                       run, twochoice, selfpaced, orderfile);
-//                       set up each as state variables defined when the 
+//                       set up each as state variables defined when the
 //                       user submits the Login page
 //                       changed the resp_mode selection from a trial (in
 //                       /trials/setRepType) to a state variable
-//                       moved exptBlock1 from /config/experiment so that 
+//                       moved exptBlock1 from /config/experiment so that
 //                       the experiment conditions are updated based on
 //                       the user selection of the state variables on Login
-//                       (now calls the function loadExptBlock1 from 
+//                       (now calls the function loadExptBlock1 from
 //                       /config/experiment)
 //        7/21/23 (AGH): reformatted login page in App.css
 //
 //   --------------------
 //   This file creates a Login screen that logs in the participant
-//   and allows selection of experiment options (stim_set, trialorder, 
+//   and allows selection of experiment options (stim_set, trialorder,
 //   run, twochoice, selfpaced, orderfile, resp_mode).
 //
 //*******************************************************************
@@ -33,12 +33,18 @@
 import React, { useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-
+console.log('login 1');
 import { deepCopy } from '../lib/utils';
+console.log('login 2');
 
-import { /* checkStimset, checkTrialorder, checkRun, checkTwochoice, checkSelfpaced, */ writeOrderfile, loadOrderfile /*, checkRespmode*/} from '../config/cont';
+import {
+  /* checkStimset, checkTrialorder, checkRun, checkTwochoice, checkSelfpaced, */ writeOrderfile,
+  loadOrderfile /*, checkRespmode*/,
+} from '../config/cont';
 import { loadExptBlock1 } from '../config/experiment';
 import { defaultBlockSettings } from '../config/main';
+import { refresh_instr_trials } from '../trials/instructions';
+console.log('login 3');
 
 //----------------------- 2 ----------------------
 //------------------- VARIABLES ------------------
@@ -58,12 +64,11 @@ var exptBlock1 = deepCopy(defaultBlockSettings);
 //------------------- FUNCTIONS ------------------
 
 function Login({ handleLogin, initialParticipantID, initialStudyID, validationFunction }) {
-  
   // State variables for login screen
   const [participantId, setParticipant] = useState(initialParticipantID);
   const [studyId, setStudy] = useState(initialStudyID);
   const [isError, setIsError] = useState(false);
- 
+
   const [chooseStimset, setStimset] = useState('1'); // set default as 1
   const [chooseTrialorder, setTrialorder] = useState('1'); // set default as 1
   const [chooseRun, setRun] = useState('1'); // set default as 1
@@ -80,33 +85,32 @@ function Login({ handleLogin, initialParticipantID, initialStudyID, validationFu
       if (isValid) handleLogin(participantId, studyId);
     });
   }
-  
+
   // Function to check the states of all the options and assign chosen values to each variable
   function checkConfigOptions() {
-
     // [set=#]: Stimulus set -- 1-6 (1=default) -- used in loading the order file
     stim_set = chooseStimset;
-      console.log('stimset = ' + chooseStimset);
+    console.log('stimset = ' + chooseStimset);
 
     //  [trialorder=#]: Which base order file? (1-4, 1=default)  -- controls ordering of conditions in a run
     trialorder = chooseTrialorder;
-      console.log('trialorder = ' + chooseTrialorder);
+    console.log('trialorder = ' + chooseTrialorder);
 
     // [run=#]: Which particular run? (1-1, 1=default) -- controls which actual stimuli in that set are plugged into the order
     run = chooseRun;
-      console.log('run = ' + chooseRun);
+    console.log('run = ' + chooseRun);
 
     // [resp_mode='']: Respond with buttons or keyboard? (default = button)
     resp_mode = chooseRespmode;
-      console.log('respmode = ' + chooseRespmode);
+    console.log('respmode = ' + chooseRespmode);
 
     // [twochoice=#]: 0=OSN, 1=ON response choices (0=default)
     twochoice = chooseTwochoice;
-      console.log('twochoice = ' + chooseTwochoice);
+    console.log('twochoice = ' + chooseTwochoice);
 
     // [selfpaced=#]: Should we allow infinite time with blank screen to make the response? (default =1)
     selfpaced = chooseSelfpaced;
-      console.log('selfpaced = ' + chooseSelfpaced);
+    console.log('selfpaced = ' + chooseSelfpaced);
 
     // load trial stim from jsOrders file
     // both writeOrderfile and loadOrderfil defined in /config/cont.js
@@ -116,14 +120,15 @@ function Login({ handleLogin, initialParticipantID, initialStudyID, validationFu
     // load exptBlock conditions from timeline variables
     // in /config/experiment.js
     exptBlock1 = loadExptBlock1(trial_stim, stim_set);
+    console.log('calling refresh of instr trials');
+    refresh_instr_trials();
+  }
 
-}
-
-//----------------------- 4 ----------------------
-//--------------------LOGIN FORM -----------------
+  //----------------------- 4 ----------------------
+  //--------------------LOGIN FORM -----------------
 
   return (
-    <div className='centered-h-v'> 
+    <div className='centered-h-v'>
       <div className='width-50'>
         <Form className='centered-h-v' onSubmit={handleSubmit}>
           <Form.Group className='login' size='lg' controlId='participantId'>
@@ -144,11 +149,15 @@ function Login({ handleLogin, initialParticipantID, initialStudyID, validationFu
             />
           </Form.Group>
 
-          <div className="options-container">
+          <div className='options-container'>
             <div className='login-options'>
               <Form.Group controlId='stim_set'>
                 <Form.Label>Stimulus set:</Form.Label>
-                <Form.Control as='select' value={chooseStimset} onChange={(e) => setStimset(e.target.value)}>
+                <Form.Control
+                  as='select'
+                  value={chooseStimset}
+                  onChange={(e) => setStimset(e.target.value)}
+                >
                   <option value='1'>1</option>
                   <option value='2'>2</option>
                   <option value='3'>3</option>
@@ -159,7 +168,11 @@ function Login({ handleLogin, initialParticipantID, initialStudyID, validationFu
               </Form.Group>
               <Form.Group controlId='trialorder'>
                 <Form.Label>Trial order:</Form.Label>
-                <Form.Control as='select' value={chooseTrialorder} onChange={(e) => setTrialorder(e.target.value)}>
+                <Form.Control
+                  as='select'
+                  value={chooseTrialorder}
+                  onChange={(e) => setTrialorder(e.target.value)}
+                >
                   <option value='1'>1</option>
                   <option value='2'>2</option>
                   <option value='3'>3</option>
@@ -168,7 +181,11 @@ function Login({ handleLogin, initialParticipantID, initialStudyID, validationFu
               </Form.Group>
               <Form.Group controlId='run'>
                 <Form.Label>Run:</Form.Label>
-                <Form.Control as='select' value={chooseRun} onChange={(e) => setRun(e.target.value)}>
+                <Form.Control
+                  as='select'
+                  value={chooseRun}
+                  onChange={(e) => setRun(e.target.value)}
+                >
                   <option value='1'>1</option>
                 </Form.Control>
               </Form.Group>
@@ -177,7 +194,11 @@ function Login({ handleLogin, initialParticipantID, initialStudyID, validationFu
             <div className='response-options'>
               <Form.Group controlId='respmode'>
                 <Form.Label>Response mode:</Form.Label>
-                <Form.Control as='select' value={chooseRespmode} onChange={(e) => setRespmode(e.target.value)}>
+                <Form.Control
+                  as='select'
+                  value={chooseRespmode}
+                  onChange={(e) => setRespmode(e.target.value)}
+                >
                   <option value='button'>Buttons</option>
                   <option value='keyboard'>Keyboard</option>
                 </Form.Control>
@@ -231,5 +252,17 @@ function Login({ handleLogin, initialParticipantID, initialStudyID, validationFu
 
 //----------------------- 5 ----------------------
 //---------------------EXPORTS -------------------
+console.log('login 4');
 
-export { Login, stim_set, trialorder, run, resp_mode, twochoice, selfpaced, orderfile, trial_stim, exptBlock1 };
+export {
+  Login,
+  stim_set,
+  trialorder,
+  run,
+  resp_mode,
+  twochoice,
+  selfpaced,
+  orderfile,
+  trial_stim,
+  exptBlock1,
+};
