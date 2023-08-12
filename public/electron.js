@@ -13,10 +13,25 @@
 //                       is closed before experiment end
 //        7/24/23 (AGH): added fsExtra and made changes 
 //                       saveDataandQuit to correct for stream errors
+//        8/3/23  (AGH): added initializeCsvWriter(), and made corresponding
+//                       chnages to getSavePath, ipc.on('data') and
+//                       ipc.on('will-quit') to save data in a csv
+//                       file as well as json
+//        8/4/23  (AGH): made changes to getSavePath and added 
+//                       getFormattedDate() to save both csv and json data 
+//                       files to a timestamped folder within the date
+//                       folder
+//                       removed git info from the data
+//        8/9/23  (AGH): continued additions to csv data
 //
 //   --------------------
 //   This file handles the Electron framework integration for the 
-//   application, managing data storage, event handling, etc.
+//   application, managing data storage, event handling, etc. This version
+//   in the branch csv_unfinished does create a csv file but causes
+//   the app to crash at unexpected points after certain tasks.
+//   NEEDS TO BE FIXED! (All of the changes are in the csv initialization
+//   at the top of the file and in getSavePath, ipc.on('data') and
+//   app.on('will-quit').
 //
 //*******************************************************************
 
@@ -29,6 +44,51 @@ const fs = require('fs-extra');
 const log = require('electron-log');
 const fsExtra = require('fs-extra'); // 7/24/23 (AGH) ADDED
 
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+
+let csvWriter;
+
+const initializeCsvWriter = (participantID, studyID, jsonFolderPath) => {
+  if (participantID !== '' && studyID !== '') {
+    const desktop = app.getPath('desktop');
+    const date = today.toISOString().slice(0, 10);
+    const csvFilename = `pid_${participantID}_${today.getTime()}.csv`;
+    const csvFilePath = path.join(jsonFolderPath, csvFilename);
+
+    // Create the folders if they don't exist
+    fsExtra.ensureDirSync(path.join(desktop, studyID));
+    fsExtra.ensureDirSync(path.join(desktop, studyID, participantID));
+    fsExtra.ensureDirSync(path.join(desktop, studyID, participantID, date));
+
+    // Define the CSV headers with labels and corresponding data keys
+    const csvHeaders = [
+      { id: 'login', title: 'Login Options' },
+      { id: 'consent', title: 'Consent' },
+      { id: 'demog', title: 'Demographics' },
+      { id: 'pcon', title: 'Perceptual Control Task' },
+      { id: 'cont', title: 'Continuous oMST' },
+    ];
+
+   // Create the CSV writer with custom formatting function
+    csvWriter = createCsvWriter({
+      path: csvFilePath,
+      header: csvHeaders,
+    });
+  }
+};
+
+const getFormattedTimestamp = () => {
+  const options = {
+    hour12: true,
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  };
+
+  const time = today.toLocaleTimeString(undefined, options);
+
+  return `${time}`;
+};
 // Event Trigger
 const { eventCodes, vendorId, productId, comName } = require('./config/trigger');
 const { getPort, sendToPort } = require('event-marker');
@@ -258,15 +318,17 @@ const today = new Date();
 const getSavePath = (participantID, studyID) => {
   if (participantID !== '' && studyID !== '') {
     const desktop = app.getPath('desktop');
-    const name = app.getName();
     const date = today.toISOString().slice(0, 10);
+    const timestamp = getFormattedTimestamp(); 
+    
     // 7/10/23 (AGH) ADDED: This section was added for the omst to ensure that data was saved on the first iteration of a studyID and participant ID
-    const folderPath = path.join(desktop, studyID, participantID, date, name);
+    const folderPath = path.join(desktop, studyID, participantID, date, timestamp);
 
     // Create the folders if they don't exist
     fs.mkdirSync(path.join(desktop, studyID), { recursive: true });
     fs.mkdirSync(path.join(desktop, studyID, participantID), { recursive: true });
     fs.mkdirSync(path.join(desktop, studyID, participantID, date), { recursive: true });
+        fs.mkdirSync(path.join(desktop, studyID, participantID, date, timestamp), { recursive: true });
 
     return folderPath;
     // END OF ADDED SECTION
@@ -314,15 +376,105 @@ ipc.on('data', (event, args) => {
       stream.write(',');
     }
 
-    // write the data
-    data = JSON.stringify({ ...args, git });
+    // write the Json data
+    data = JSON.stringify({ ...args});
     data = data.replace('{"summary"', ',{"summary"');
     stream.write(data); 
 
     // Copy provocation images to participant's data folder
     if (args.trial_type === 'image-keyboard-response') images.push(args.stimulus.slice(7));
-
   }
+
+  // csv data writing below
+  
+  // Login options
+  let startDate = args.login_data.start_date;
+  let order = `${args.login_data.stimset}.${args.login_data.sublist}`;
+  let resp = args.login_data.respmode;
+  let lang = args.login_data.language;
+  let incl_con = args.login_data.include_consent;
+    if (args.login_data.include_consent == true) {
+      incl_con = 'Consent included';
+    } else {
+      incl_con = 'Consent not included';
+    }
+  let incl_demog = args.login_data.include_demog;
+    if (args.login_data.include_demog == true) {
+      incl_demog = 'Demographics included';
+    } else {
+      incl_demog = 'Demographics not included';
+    }
+  let incl_pcon = args.login_data.include_pcon;
+    if (args.login_data.include_pcon == true) {
+      incl_pcon = 'Pcon included';
+    } else {
+      incl_pcon = 'Pcon not included';
+    }
+  let incl_instr = args.login_data.include_instr;
+    if (args.login_data.include_demog == true) {
+      incl_instr = 'Instructions included';
+    } else {
+      incl_instr = 'Instructions not included';
+    }
+  let twochoice = args.login_data.twochoice;
+    if (args.login_data.include_demog == true) {
+      twochoice = 'Old New task (two choice)';
+    } else {
+      twochoice = 'Old Similar New task (three choice)';
+    }
+  let selfpaced = args.login_data.selfpaced;
+    if (args.login_data.include_demog == true) {
+      selfpaced = 'Selfpaced experiment (selfpaced = true)';
+    } else {
+      selfpaced = 'Timed experiment (selfpaced = false)';
+    }
+
+
+  //Check if Consent Form is included and whether the participant consented
+  let consentTask = 'N/A';
+  
+  if (args.task == 'consent' && args.response == 0) {
+    consentTask = 'Consented';
+  } else if (args.task == 'consent' && args.response == 1) {
+    consentTask = 'Not consented';
+  } else {
+    consentTask - 'N/A';
+  }
+
+  // Check if Demographics Form is included and extract demographics data
+  let demogName = 'N/A';
+  let demogDOB = 'N/A';
+  let demogGender = 'N/A';
+  let demogEthnicity = 'N/A';
+  let demogRace = 'N/A';
+  if (args.task == 'demographics') {
+    const demographicsForm = args.response;
+    demogName = demographicsForm.fullname;
+    demogDOB = demographicsForm.dob;
+    demogGender = demographicsForm.gender;
+    demogEthnicity = demographicsForm.ethnicity;
+    demogRace = demographicsForm.race;
+  }
+
+
+  // Create an object with the data fields you want to include in the CSV
+  const csvData = {
+    login: `Start date: ${startDate}\nOrder: ${order}\nResponse: ${resp}\nLanguage: ${lang}\n${incl_con}\n${incl_demog}\n${incl_pcon}\n${incl_instr}\n${twochoice}\n${selfpaced}\n`,
+    consent: `${incl_con}\n${consentTask}`,
+    demog: `${incl_demog}\nName: ${demogName}\nDob: ${demogDOB}\nGender: ${demogGender}\nEthnicity: ${demogEthnicity}\nRace: ${demogRace}\n`,
+    // pcon: `${incl_pcon}\nPcon summary: ${pcon_sum}\n`,
+    // cont: `Cont summary: ${cont_sum}\n`,
+  };
+
+    // Write to CSV file
+    if (csvWriter) {
+      csvWriter.writeRecords([csvData]).then(() => {
+        console.log('Data written to CSV file successfully.');
+      }).catch((err) => {
+        console.error('Error writing to CSV:', err);
+      });
+    }
+  
 });
 
 // Save Video
@@ -413,5 +565,9 @@ app.on('will-quit', () => {
       log.error(err);
       fs.copyFileSync(preSavePath, getFullPath(`pid_${participantID}_${today.getTime()}.json`));
     });
+  }
+    //reset csvWriter
+    if (csvWriter) {
+    csvWriter = null;
   }
 });
