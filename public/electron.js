@@ -13,6 +13,8 @@
 //                       is closed before experiment end
 //        7/24/23 (AGH): added fsExtra and made changes 
 //                       saveDataandQuit to correct for stream errors
+//        8/9/23  (AGH): attempted update of app icon (unsuccesfull)
+//                       requires troubleshooting and fixing
 //
 //   --------------------
 //   This file handles the Electron framework integration for the 
@@ -92,7 +94,7 @@ function createWindow() {
     mainWindow = new BrowserWindow({
       width: 1500,
       height: 900,
-      icon: './favicon.ico',
+      icon: './MST.ico',
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
@@ -101,7 +103,7 @@ function createWindow() {
   } else {
     mainWindow = new BrowserWindow({
       fullscreen: true,
-      icon: './favicon.ico',
+      icon: './MST.ico',
       frame: false,
       webPreferences: {
         nodeIntegration: true,
