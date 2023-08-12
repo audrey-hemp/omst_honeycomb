@@ -130,13 +130,13 @@
         {
           "name": "@electron-forge/maker-deb",
           "config": {
-            "icon": "./assets/icons/mac/icon.icns"
+            "icon": "./assets/icons/mac/MST.icns"
           }
         },
         {
           "name": "@electron-forge/maker-dmg",
           "config": {
-            "icon": "./assets/icons/mac/icon.icns",
+            "icon": "./assets/icons/mac/MST.icns",
             "overwrite": true
           },
           "platforms": [
@@ -146,7 +146,7 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "iconUrl": "https://raw.githubusercontent.com/brown-ccv/honeycomb/main/assets/icons/win/icon.ico"
+            "iconUrl": "https://raw.githubusercontent.com/brown-ccv/honeycomb/main/assets/icons/win/icon.ico" // likely needs to change
           }
         }
       ]
